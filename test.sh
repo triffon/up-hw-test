@@ -6,7 +6,7 @@ PROGDIR=$BASEDIR/progs
 RESULTDIR=$BASEDIR/results
 TOTALSFILE=$RESULTDIR/results.csv
 TIMEOUT=10
-LIMIT=2K
+LIMIT=4K
 MAX=10
 GCC=g++
 SHELL="/bin/sh -c"
@@ -43,6 +43,7 @@ function do_extract()
     case $EXTENSION in
 	zip) unzip -n -j "$FILE" ;;
 	rar) unrar e -o- "$FILE" ;;
+	7z) 7z e -y "$FILE" ;;
     esac
 }
 
@@ -64,10 +65,10 @@ function quirk_wrong_names
     then
 	for SUBFILE in *.cpp
 	do
-	    if ! echo $SUBFILE | grep ^prob > /dev/null 2> /dev/null
+	    if echo $SUBFILE | grep -v '^prog[0-9]*.cpp$' > /dev/null 2> /dev/null
 	    then
 	        # wrong name, try to recover...
-		NEWNAME=`echo "$SUBFILE" | sed -e 's/^\(\|.*[^0-9]\)\([0-9]\+\)\.\(cpp\|c\|cc\)/prog\2.cpp/'`
+		NEWNAME=`echo "$SUBFILE" | sed -e 's/^\(\|.*[^0-9]\)\([0-9]\+\)\(\.\(cpp\|c\|cc\)\)\+/prog\2.cpp/'`
 		log "QUIRK: Autorenaming $SUBFILE to $NEWNAME"
 		mv "$SUBFILE" "$NEWNAME"
 	    fi
@@ -78,7 +79,7 @@ function quirk_wrong_names
 
 function quirk_stdafx
 {
-    if cat *.cpp 2> /dev/null | grep stdafx >/dev/null 2>/dev/null
+    if grep stdafx *.cpp >/dev/null 2>/dev/null
     then
 	log "QUIRK: Creating dummy stdafx.h"
 	cat > stdafx.h <<EOF
@@ -87,6 +88,17 @@ function quirk_stdafx
 #include <cmath>
 #include <cstring>
 EOF
+	CPPOPTS="-I$TMPDIR $CPPOPTS"
+    fi
+}
+
+function quirk_header
+{
+    HEADER="$1"
+    if grep "$HEADER" *.cpp >/dev/null 2>/dev/null
+    then
+	log "QUIRK: Creating dummy $HEADER"
+	touch "$HEADER"
 	CPPOPTS="-I$TMPDIR $CPPOPTS"
     fi
 }
@@ -100,6 +112,37 @@ function quirk_system_pause
     fi
 }
 
+function quirk_utf()
+{
+    if file *.cpp | grep 'UTF-' >/dev/null 2>/dev/null
+    then
+	# there are some UTF-encoded source files, try to convert
+	for FILE in *.cpp
+	do
+	    FORMAT=`file "$FILE"`
+	    ENCODING=
+	    if echo "$FORMAT" | grep -i 'UTF-8' >/dev/null 2>/dev/null
+	    then
+		ENCODING=utf8
+	    fi
+	    if echo "$FORMAT" | grep -i 'UTF-16' >/dev/null 2>/dev/null
+	    then
+		ENCODING=utf16
+	    fi
+	    if [ "$ENCODING" != "" ]
+	    then
+		log "QUIRK: Decoding $FILE using $ENCODING"
+		iconv -f $ENCODING <"$FILE" >"$FILE".iconv
+	    fi
+	done
+	for FILE in *.iconv
+	do
+	    BASENAME=`basename "$FILE" .iconv`
+	    mv "$FILE" "$BASENAME"
+	done
+    fi
+}
+
 function quirks()
 {
     # some archives have nested zips/rars in them :(
@@ -108,16 +151,21 @@ function quirks()
     # some cpp files are named wrongly :(
     quirk_wrong_names
 
-    # some programs expect stdafx.h :(
+    # some programs expect stdafx.h, conio.h, windows.h :(
     quirk_stdafx
+    quirk_header "conio.h"
+    quirk_header "windows.h"
 
     # some programs use system("pause")
     quirk_system_pause
+
+    # some programs are UTF-encoded :(
+    quirk_utf
 }
 
 function extract_archive()
 {
-    # handles zip and rar
+    # handles zip, rar, and 7zip
     DIR="$2"
 
     rm -rf "$DIR"
@@ -138,6 +186,7 @@ function run_tests()
 
     SOLUTION_BASE=`basename "$SOLUTION" .zip`
     SOLUTION_BASE=`basename "$SOLUTION_BASE" .rar`
+    SOLUTION_BASE=`basename "$SOLUTION_BASE" .7z`
 
     SOLUTION_ID=`echo "$SOLUTION_BASE" | cut -d_ -f1`
 
@@ -231,7 +280,7 @@ if [ $# -gt 0 ]; then
 else
     # this program should run all tests
     create_totals
-    for PROG in "$PROGDIR"/*.{zip,rar}; do
+    for PROG in "$PROGDIR"/*.{zip,rar,7z}; do
 	run_tests "$PROG"
     done
 fi
