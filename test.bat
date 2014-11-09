@@ -22,7 +22,7 @@ for /l %%i in (1,1,10) do (
 			echo.
 			echo ^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<^<
 			echo.
-			fc /w %%t.out %%t.ans >nul
+			fc %%t.out %%t.ans >nul
 			if errorlevel 1 (
 				echo !!!!!!!!!!!!!!!! ERROR !!!!!!!!!!!!!!!!!
 				echo ########### Expected output ############
