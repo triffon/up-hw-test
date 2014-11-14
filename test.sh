@@ -6,7 +6,7 @@ PROGDIR=$BASEDIR/progs
 RESULTDIR=$BASEDIR/results
 TOTALSFILE=$RESULTDIR/results.csv
 TIMEOUT=10
-LIMIT=4K
+LIMIT=100K
 MAX=10
 GCC=g++
 SHELL="/bin/sh -c"
@@ -188,7 +188,7 @@ function run_tests()
     SOLUTION_BASE=`basename "$SOLUTION_BASE" .rar`
     SOLUTION_BASE=`basename "$SOLUTION_BASE" .7z`
 
-    SOLUTION_ID=`echo "$SOLUTION_BASE" | cut -d_ -f1`
+    SOLUTION_ID=`echo "$SOLUTION_BASE" | cut -d_ -f2`
 
     TMPDIR="$PROGDIR/tmp"
  
