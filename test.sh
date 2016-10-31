@@ -183,12 +183,10 @@ function extract_archive()
 function run_tests()
 {
     SOLUTION="$1"
-
-    SOLUTION_BASE=`basename "$SOLUTION" .zip`
-    SOLUTION_BASE=`basename "$SOLUTION_BASE" .rar`
-    SOLUTION_BASE=`basename "$SOLUTION_BASE" .7z`
-
-    SOLUTION_ID=`echo "$SOLUTION_BASE" | cut -d_ -f2`
+    FIRST_PROGRAM_PATH=($OLUTION/fn*)
+    FIRST_PROGRAM_BASENAME=`basename $FIRST_PROGRAM_PATH`
+    # extract FN
+    SOLUTION_ID=`echo "$FIRST_PROGRAM" | cut -d_ -f1 | cut -c3-10`
 
     TMPDIR="$PROGDIR/tmp"
  
@@ -202,7 +200,7 @@ function run_tests()
     for ID in `seq 1 $MAX`
     do
 	log "Testing program $ID"
-	SRC="$TMPDIR/prog$ID.cpp"
+	SRC="$TMPDIR/fn*_prob$ID_*.cpp"
 	EXE="$TMPDIR/prog$ID"
 	if [ -f "$SRC" ]
 	then
@@ -247,8 +245,10 @@ function run_tests()
 		    then
 			write_status "RE"
 		    else
+                        # ignore space changes to permit multiple spaces instead of one
+                        # and to handle different Windows/Unix/MacOSX EOLs correctly
 			# check against expected output
-			if diff -w "$PROGOUT" "$TESTOUT" > /dev/null 2> /dev/null
+			if diff -b "$PROGOUT" "$TESTOUT" > /dev/null 2> /dev/null
 			then
 			    write_status "OK"
 			else
@@ -280,7 +280,7 @@ if [ $# -gt 0 ]; then
 else
     # this program should run all tests
     create_totals
-    for PROG in "$PROGDIR"/*.{zip,rar,7z}; do
+    for PROG in "$PROGDIR"/*; do
 	run_tests "$PROG"
     done
 fi
