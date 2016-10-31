@@ -34,7 +34,7 @@ function run_tests()
     for ID in `seq 1 $MAX`
     do
 	log "Testing program $ID"
-	SRC="$TMPDIR/prog$ID.cpp"
+	SRC="$TMPDIR/fn*_prob$ID_*.cpp"
 	EXE="$TMPDIR/prog$ID"
 	if [ -f "$SRC" ]
 	then
@@ -73,7 +73,9 @@ function run_tests()
 			write_status "RE"
 		    else
 			# check against expected output
-			if diff -w "$PROGOUT" "$TESTOUT" > /dev/null 2> /dev/null
+                        # ignore space changes to permit multiple spaces instead of one
+                        # and to handle different Windows/Unix/MacOSX EOLs correctly
+			if diff -b "$PROGOUT" "$TESTOUT" > /dev/null 2> /dev/null
 			then
 			    write_status "OK"
 			else

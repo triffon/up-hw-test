@@ -3,8 +3,8 @@
 echo ~~~~~~~~~~~~ Tests started ~~~~~~~~~~~~~
 
 for /l %%i in (1,1,10) do (
-	if not exist prog%%i.exe (
-		echo ========= prog%%i.exe not found! =========
+	if not exist fn*_prob%%i_*.exe (
+		echo ========= fnXXXXX_prob%%i_CC.exe not found! =========
 	) else (
 		echo ======= Testing program %%i started ======
 		echo.
