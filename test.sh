@@ -183,7 +183,7 @@ function extract_archive()
 function run_tests()
 {
     SOLUTION="$1"
-    FIRST_PROGRAM_PATH=($OLUTION/fn*)
+    FIRST_PROGRAM_PATH=($SOLUTION/fn*)
     FIRST_PROGRAM_BASENAME=`basename $FIRST_PROGRAM_PATH`
     # extract FN
     SOLUTION_ID=`echo "$FIRST_PROGRAM" | cut -d_ -f1 | cut -c3-10`
@@ -200,7 +200,7 @@ function run_tests()
     for ID in `seq 1 $MAX`
     do
 	log "Testing program $ID"
-	SRC="$TMPDIR/fn*_prob$ID_*.cpp"
+	SRC=`find "$TMPDIR" -name "fn*_prob$ID\_*.cpp" -print0`
 	EXE="$TMPDIR/prog$ID"
 	if [ -f "$SRC" ]
 	then
