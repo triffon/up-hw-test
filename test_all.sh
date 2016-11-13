@@ -198,7 +198,7 @@ function run_tests()
     # extract FN
     SOLUTION_ID=`echo "$FIRST_PROGRAM_BASENAME" | cut -d_ -f1 | cut -c3-10`
 
-    TMPDIR="$PROGDIR/tmp"
+    TMPDIR="$PROGDIR/../tmp"
  
     CPPOPTS=
 
