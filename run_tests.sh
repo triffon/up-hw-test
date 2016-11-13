@@ -47,5 +47,5 @@ echo "Done, results written to $RESULTS_DIR"
 ARCHIVE="$RESULTS_DIR.zip"
 
 echo "Archiving results to $ARCHIVE..."
-zip -q "$ARCHIVE" "$RESULTS_DIR" > /dev/null
+zip -q "$ARCHIVE" "$RESULTS_DIR"/* > /dev/null
 echo "Done"
