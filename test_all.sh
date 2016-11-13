@@ -114,7 +114,15 @@ function quirk_system_pause
     if grep 'system' *.cpp >/dev/null 2>/dev/null
     then
 	log "QUIRK: Faking system function"
-	CPPOPTS=-D'system(x)=0'" $CPPOPTS"
+        # the below quirk doesn't work anymore... let's append to the .cpp files instead
+	# CPPOPTS=-D'system(x)=0'" $CPPOPTS"
+
+        for FILE in *.cpp
+        do
+            echo >> $FILE <<EOF
+int system(const char*) {}
+EOF
+        done
     fi
 }
 
@@ -138,7 +146,7 @@ function quirk_utf()
 	    if [ "$ENCODING" != "" ]
 	    then
 		log "QUIRK: Decoding $FILE using $ENCODING"
-		iconv -f $ENCODING <"$FILE" >"$FILE".iconv
+		iconv -f $ENCODING -t ascii//TRANSLIT <"$FILE" >"$FILE".iconv
 	    fi
 	done
 	for FILE in *.iconv
@@ -158,10 +166,11 @@ function quirks()
     # disable quirks because of new file nameing
     # quirk_wrong_names
 
-    # some programs expect stdafx.h, conio.h, windows.h :(
+    # some programs expect stdafx.h, conio.h, windows.h, tchar.h :(
     quirk_stdafx
     quirk_header "conio.h"
     quirk_header "windows.h"
+    quirk_header "tchar.h"
 
     # some programs use system("pause")
     quirk_system_pause
@@ -196,7 +205,14 @@ function run_tests()
     FIRST_PROGRAM_BASENAME=`basename "$FIRST_PROGRAM_PATH"`
 
     # extract FN
-    SOLUTION_ID=`echo "$FIRST_PROGRAM_BASENAME" | cut -d_ -f1 | cut -c3-10`
+    SOLUTION_ID=`echo "$FIRST_PROGRAM_BASENAME" | cut -d_ -f1 | cut -c3-8`
+
+    REGEXP_NUMBER='^[0-9]+$'
+    if ! [[ $SOLUTION_ID =~ $REGEXP_NUMBER ]]
+    then
+        log "Could not parse ID from file name $FIRST_PROGRAM_BASENAME in solution $SOLUTION"
+        return
+    fi
 
     TMPDIR="$PROGDIR/../tmp"
  
