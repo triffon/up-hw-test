@@ -36,6 +36,12 @@ function write_status()
     echo -n ",$1" >> "$TOTALSFILE"
 }
 
+function do_copy()
+{
+    FILE="$1"
+    cp "$FILE"/* .
+}
+
 function do_extract()
 {
     FILE="$1"
@@ -149,7 +155,8 @@ function quirks()
     quirk_nested
 
     # some cpp files are named wrongly :(
-    quirk_wrong_names
+    # disable quirks because of new file nameing
+    # quirk_wrong_names
 
     # some programs expect stdafx.h, conio.h, windows.h :(
     quirk_stdafx
@@ -165,14 +172,16 @@ function quirks()
 
 function extract_archive()
 {
-    # handles zip, rar, and 7zip
     DIR="$2"
 
     rm -rf "$DIR"
     mkdir "$DIR"
     pushd "$DIR" > /dev/null
 
-    do_extract "$1"
+    # extraction of archives no longer necessary
+    # do_extract "$1"
+    # copy files to target dir instead
+    do_copy "$1"
 
     # attempt to recover broken solutions
     quirks
@@ -183,10 +192,11 @@ function extract_archive()
 function run_tests()
 {
     SOLUTION="$1"
-    FIRST_PROGRAM_PATH=($SOLUTION/fn*)
-    FIRST_PROGRAM_BASENAME=`basename $FIRST_PROGRAM_PATH`
+    FIRST_PROGRAM_PATH=("$SOLUTION"/fn*)
+    FIRST_PROGRAM_BASENAME=`basename "$FIRST_PROGRAM_PATH"`
+
     # extract FN
-    SOLUTION_ID=`echo "$FIRST_PROGRAM" | cut -d_ -f1 | cut -c3-10`
+    SOLUTION_ID=`echo "$FIRST_PROGRAM_BASENAME" | cut -d_ -f1 | cut -c3-10`
 
     TMPDIR="$PROGDIR/tmp"
  
@@ -195,6 +205,7 @@ function run_tests()
     echo -n "$SOLUTION_ID" >> "$TOTALSFILE"
 
     log "Testing $SOLUTION_ID"
+    
     extract_archive "$SOLUTION" "$TMPDIR"
 
     for ID in `seq 1 $MAX`
