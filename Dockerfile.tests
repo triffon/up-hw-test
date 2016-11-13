@@ -1,6 +1,6 @@
 # Image for running a specific set of UP homework tests
 
-FROM up-hw-test
+FROM trifon/up-hw-test:latest
 MAINTAINER Trifon Trifonov <triffon@fmi.uni-sofia.bg>
 
 COPY tests /usr/src/up-hw-test/tests

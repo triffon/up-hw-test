@@ -1,12 +1,12 @@
 #!/bin/sh
 
-BASE_IMAGE=up-hw-test
+BASE_IMAGE=trifon/up-hw-test
 
 if [ $# -gt 0 -a -d "$1" ]; then
     # build an image for a specific set of tests
     DIR="$1"
     DIR_NAME=`basename "$DIR"`
-    IMAGE_NAME=$BASE_IMAGE-$DIR_NAME
+    IMAGE_NAME=$BASE_IMAGE:$DIR_NAME
     echo "Building image $IMAGE_NAME"
 
     # copy Dockerfile to build context
@@ -16,5 +16,5 @@ if [ $# -gt 0 -a -d "$1" ]; then
 else
     # build the generic image in which tests are attached as a volume
     echo "Building image $BASE_IMAGE"
-    docker build -t $BASE_IMAGE .
+    docker build -t $BASE_IMAGE:latest .
 fi
