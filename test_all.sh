@@ -163,7 +163,7 @@ function quirks()
     quirk_nested
 
     # some cpp files are named wrongly :(
-    # disable quirks because of new file nameing
+    # disable quirks because of new file naming
     # quirk_wrong_names
 
     # some programs expect stdafx.h, conio.h, windows.h, tchar.h :(
@@ -216,7 +216,7 @@ function run_tests()
 
     TMPDIR="$PROGDIR/../tmp"
  
-    CPPOPTS=
+    CPPOPTS=-std=c++11
 
     echo -n "$SOLUTION_ID" >> "$TOTALSFILE"
 
@@ -233,12 +233,12 @@ function run_tests()
 	then
 	    # try to compile first
 	    # be quiet, and if it doesn't work, include standard headers
-	    if ! g++ -o "$EXE" $CPPOPTS "$SRC" 2>/dev/null
+	    if ! $GCC -o "$EXE" $CPPOPTS "$SRC" 2>/dev/null
 	    then
 		log "QUIRK: autoincluding standard headers"
 		INCLUDES="-include cmath -include cstring -include climits -include cstdio"
-		# now yell all the errors and warnigns at the world :)
-		g++ -o "$EXE" $INCLUDES $CPPOPTS "$SRC"
+		# now yell all the errors and warnings at the world :)
+		$GCC -o "$EXE" $INCLUDES $CPPOPTS "$SRC"
 	    fi
 	    if [ -x "$EXE" ]
 	    then
