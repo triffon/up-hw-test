@@ -65,6 +65,19 @@ function quirk_nested
     fi
 }
 
+function quirk_nested_dirs
+{
+    find . -type d | while read DIR
+    do
+        if [ "$DIR" != "." ]
+        then
+            # there is another directory inside other than .
+            log "QUIRK: Moving files from nested directory $DIR"
+            mv "$DIR"/* .
+        fi
+    done
+}
+
 function quirk_wrong_names
 {
     if ls *.cpp 2> /dev/null | grep -v '^prog[0-9]*.cpp$' >/dev/null 2>/dev/null
@@ -161,6 +174,9 @@ function quirks()
 {
     # some archives have nested zips/rars in them :(
     quirk_nested
+
+    # some files are inside a second directory :(
+    quirk_nested_dirs
 
     # some cpp files are named wrongly :(
     # disable quirks because of new file naming
