@@ -17,7 +17,7 @@ function create_totals()
     echo -n "ID" >> "$TOTALSFILE"
     for ID in `seq 1 $MAX`
     do
-	for TESTIN in "$TESTDIR"/$ID?.test; do
+	for TESTIN in "$TESTDIR"/$ID[A-Z]*.test; do
 	    TESTBASE=`basename "$TESTIN" .test`
 	    echo -n ",$TESTBASE" >> "$TOTALSFILE"
 	done
@@ -243,7 +243,7 @@ function run_tests()
 	    if [ -x "$EXE" ]
 	    then
 		# start tests for this program one by one
-		for TESTIN in "$TESTDIR/$ID"*.test
+		for TESTIN in "$TESTDIR/$ID"[A-Z]*.test
 		do
 		    TESTBASE=`basename "$TESTIN" .test`
 		    TESTOUT="$TESTIN".ans
@@ -284,13 +284,13 @@ function run_tests()
 		    fi
 		done
 	    else
-		for TESTIN in "$TESTDIR/$ID"*.test
+		for TESTIN in "$TESTDIR/$ID"[A-Z]*.test
 		do
 		    write_status "CE"
 		done
 	    fi
 	else
-	    for TESTIN in "$TESTDIR/$ID"*.test
+	    for TESTIN in "$TESTDIR/$ID"[A-Z]*.test
 	    do
 		write_status "NA"
 	    done
