@@ -150,7 +150,7 @@ function quirk_system_pause
 
         for FILE in *.cpp
         do
-            echo >> $FILE <<EOF
+            cat >> "$FILE" <<EOF
 int system(const char*) {}
 EOF
         done
