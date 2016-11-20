@@ -211,6 +211,57 @@ function quirk_void_main
     done
 }
 
+function quirk_itoa
+{
+    if grep "itoa\|ltoa" *.cpp >/dev/null 2>/dev/null
+    then
+        # simulation of itoa needed
+        log "QUIRK: simulating non-standard function itoa in $FILE"
+        CPPOPTS="-I$TMPDIR -include itoa.h $CPPOPTS"
+        cat > itoa.h <<EOF
+	/**
+	 * C++ version 0.4 char* style "itoa":
+	 * Written by Lukás Chmela
+	 * Released under GPLv3.
+	 */
+	char* ltoa(long value, char* result, int base) {
+		// check that the base if valid
+		if (base < 2 || base > 36) { *result = '\0'; return result; }
+
+		char* ptr = result, *ptr1 = result, tmp_char;
+		long tmp_value;
+
+		do {
+			tmp_value = value;
+			value /= base;
+			*ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz" [35 + (tmp_value - value * base)];
+		} while ( value );
+
+		// Apply negative sign
+		if (tmp_value < 0) *ptr++ = '-';
+		*ptr-- = '\0';
+		while(ptr1 < ptr) {
+			tmp_char = *ptr;
+			*ptr--= *ptr1;
+			*ptr1++ = tmp_char;
+		}
+		return result;
+	}
+
+        char* itoa(int value, char* result, int base) {
+          return ltoa(value, result, base);
+        }
+
+        char* _itoa(int value, char* result, int base) {
+          return itoa(value, result, base);
+        }
+
+        char* _ltoa(long value, char* result, int base) {
+          return ltoa(value, result, base);
+        }
+EOF
+    fi
+}
 
 function quirks()
 {
@@ -229,6 +280,9 @@ function quirks()
     quirk_header "conio.h"
     quirk_header "windows.h"
     quirk_header "tchar.h"
+
+    # some programs use the C11 funcitons itoa, _itoa, ltoa, _ltoa
+    quirk_itoa
 
     # some programs use system("pause")
     quirk_system_pause
