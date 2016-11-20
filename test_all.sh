@@ -131,7 +131,7 @@ function quirk_stdafx
 #include <cmath>
 #include <cstring>
 EOF
-	CPPOPTS="-I\"$TMPDIR\" $CPPOPTS"
+	CPPOPTS="$CPPOPTS -I\"$TMPDIR\""
     fi
 }
 
@@ -142,7 +142,7 @@ function quirk_header
     then
 	log_quirk "Creating dummy $HEADER"
 	touch "$HEADER"
-	CPPOPTS="-I\"$TMPDIR\" $CPPOPTS"
+	CPPOPTS="$CPPOPTS -I\"$TMPDIR\""
     fi
 }
 
@@ -168,7 +168,7 @@ function quirk_int64()
     if grep __int64 *.cpp >/dev/null 2>/dev/null
     then
         log_quirk "Simulating __int64"
-        CPPOPTS="-include inttypes.h -D'__int64=int64_t'"
+        CPPOPTS="$CPPOPTS -include inttypes.h -D'__int64=int64_t'"
     fi
 }
 
@@ -222,8 +222,8 @@ function quirk_itoa
     if grep "itoa\|ltoa" *.cpp >/dev/null 2>/dev/null
     then
         # simulation of itoa needed
-        log_quirk "Simulating non-standard function itoa in $FILE"
-        CPPOPTS="-I\"$TMPDIR\" -include itoa.h $CPPOPTS"
+        log_quirk "Simulating non-standard function itoa"
+        CPPOPTS="$CPPOPTS -I\"$TMPDIR\" -include itoa.h"
         cat > itoa.h <<EOF
 	/**
 	 * C++ version 0.4 char* style "itoa":
@@ -286,7 +286,7 @@ int strcpy_s(char * dest, size_t, const char *src) {
   return 0;
 }
 EOF
-        CPPOPTS="-D'scanf_s=scanf' -I\"$TMPDIR\" -include fake_s.h $CPPOPTS"
+        CPPOPTS="$CPPOPTS -D'scanf_s=scanf' -I\"$TMPDIR\" -include fake_s.h"
 
     fi
 }
@@ -398,13 +398,12 @@ function run_tests()
 	then
 	    # try to compile first
 	    # be quiet, and if it doesn't work, include standard headers
-	    if ! $GCC -o "$EXE" $CPPOPTS "$SRC" 2>/dev/null
+	    if ! eval $GCC -o "$EXE" $CPPOPTS "$SRC" 2>/dev/null
 	    then
-		log_quirk "Autoincluding standard headers, adding -fpermissive"
-		INCLUDES="-include cmath -include cstring -include climits -include cstdio -include cfloat -include iomanip"
-                CPPOPTS="-fpermissive $CPPOPTS"
+		log_quirk "Autoincluding standard headers, adding -fpermissive for $SRC"
+		MORECPPOPTS="-include cmath -include cstring -include climits -include cstdio -include cfloat -include iomanip -fpermissive"
 		# now yell all the errors and warnings at the world :)
-		$GCC -o "$EXE" $INCLUDES $CPPOPTS "$SRC"
+		eval $GCC -o "$EXE" $CPPOPTS $MORECPPOPTS "$SRC"
 	    fi
 	    if [ -x "$EXE" ]
 	    then
