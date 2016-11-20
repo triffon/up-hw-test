@@ -180,7 +180,7 @@ function quirk_int64()
     if grep __int64 *.cpp >/dev/null 2>/dev/null
     then
         log_quirk "Simulating __int64"
-        CPPOPTS="$CPPOPTS -include inttypes.h -D'__int64=int64_t'"
+        CPPOPTS="$CPPOPTS -D'__int64=long long'"
     fi
 }
 
