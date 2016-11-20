@@ -293,9 +293,25 @@ int strcat_s(char * dest, size_t, const char *src) {
   strcat(dest, src);
   return 0;
 }
+template <size_t size>
+int strcat_s(
+   char (&strDestination)[size],
+   const char *strSource
+) {
+  strcat(strDestination, strSource);
+  return 0;
+}
 
 int strcpy_s(char * dest, size_t, const char *src) {
   strcpy(dest, src);
+  return 0;
+}
+template <size_t size>
+int strcpy_s(
+   char (&strDestination)[size],
+   const char *strSource
+) {
+  strcpy(strDestination, strSource);
   return 0;
 }
 EOF
