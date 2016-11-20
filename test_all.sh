@@ -252,7 +252,7 @@ function run_tests()
 	    if ! $GCC -o "$EXE" $CPPOPTS "$SRC" 2>/dev/null
 	    then
 		log "QUIRK: autoincluding standard headers"
-		INCLUDES="-include cmath -include cstring -include climits -include cstdio"
+		INCLUDES="-include cmath -include cstring -include climits -include cstdio -include cfloat -include iomanip"
 		# now yell all the errors and warnings at the world :)
 		$GCC -o "$EXE" $INCLUDES $CPPOPTS "$SRC"
 	    fi
