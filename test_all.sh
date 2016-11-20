@@ -269,13 +269,14 @@ EOF
     fi
 }
 
-function quirks_s()
+function quirk_s()
 {
     if grep "strcpy_s\|scanf_s\|strcat_s" *.cpp >/dev/null 2>/dev/null
     then
         # fake _s functions via their insecure counterparts
         log_quirk "Faking strcpy_s, scanf_s, strcat_s"
         cat > fake_s.h <<EOF
+#include <cstring>
 int strcat_s(char * dest, size_t, const char *src) {
   strcat(dest, src);
   return 0;
@@ -335,7 +336,7 @@ function quirks()
     # some programs use void main, which is non-standard
     quirk_void_main
 
-    popd "$DIR" >/dev/null
+    popd >/dev/null
 }
 
 function extract_archive()
