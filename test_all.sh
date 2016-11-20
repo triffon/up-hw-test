@@ -22,12 +22,18 @@ function create_totals()
 	    echo -n ",$TESTBASE" >> "$TOTALSFILE"
 	done
     done
-    echo >> "$TOTALSFILE"
+    echo ",notes" >> "$TOTALSFILE"
 }
 
 function log()
 {
     echo "$@" >&2
+}
+
+function log_quirk()
+{
+    log "QUIRK: $1"
+    NOTES="$NOTES $1;"
 }
 
 function write_status()
@@ -59,7 +65,7 @@ function quirk_nested
     then
 	for SUBFILE in *.{zip,rar}
 	do
-	    log "QUIRK: Extracting nested archive $SUBFILE"
+	    log_quirk "Extracting nested archive $SUBFILE"
 	    do_extract "$SUBFILE"
 	done
     fi
@@ -72,7 +78,7 @@ function quirk_nested_dirs
         if [ "$DIR" != "." ]
         then
             # there is another directory inside other than .
-            log "QUIRK: Moving files from nested directory $DIR"
+            log_quirk "Moving files from nested directory $DIR"
             mv "$DIR"/* .
         fi
     done
@@ -86,7 +92,7 @@ function quirk_wrong_names
         do
             # spaces in filenames, remove them :(
 	    NEWNAME=`echo "$SUBFILE" | sed -e 's/ //g'`
-	    log "QUIRK: Autorenaming $SUBFILE to $NEWNAME"
+	    log_quirk "Autorenaming $SUBFILE to $NEWNAME"
 	    mv "$SUBFILE" "$NEWNAME"
         done
     fi
@@ -97,7 +103,7 @@ function quirk_wrong_names
         do
             # dashes in filenames, replace them with underscores :(
 	    NEWNAME=`echo "$SUBFILE" | sed -e 's/-/_/g'`
-	    log "QUIRK: Autorenaming $SUBFILE to $NEWNAME"
+	    log_quirk "Autorenaming $SUBFILE to $NEWNAME"
 	    mv "$SUBFILE" "$NEWNAME"
         done
     fi
@@ -108,7 +114,7 @@ function quirk_wrong_names
         do
             # fn_XXXXX instead of fnXXXXX, remove first underscore
 	    NEWNAME=`echo "$SUBFILE" | sed -e 's/fn_/fn/'`
-	    log "QUIRK: Autorenaming $SUBFILE to $NEWNAME"
+	    log_quirk "Autorenaming $SUBFILE to $NEWNAME"
 	    mv "$SUBFILE" "$NEWNAME"
         done
     fi
@@ -118,7 +124,7 @@ function quirk_stdafx
 {
     if grep stdafx *.cpp >/dev/null 2>/dev/null
     then
-	log "QUIRK: Creating dummy stdafx.h"
+	log_quirk "Creating dummy stdafx.h"
 	cat > stdafx.h <<EOF
 #define _TCHAR char
 #define _tmain main
@@ -134,7 +140,7 @@ function quirk_header
     HEADER="$1"
     if grep "$HEADER" *.cpp >/dev/null 2>/dev/null
     then
-	log "QUIRK: Creating dummy $HEADER"
+	log_quirk "Creating dummy $HEADER"
 	touch "$HEADER"
 	CPPOPTS="-I\"$TMPDIR\" $CPPOPTS"
     fi
@@ -146,9 +152,9 @@ function quirk_system_pause
     do
         if grep system "$FILE" >/dev/null 2>/dev/null
         then
-	    log "QUIRK: Faking system function for $FILE"
+	    log_quirk "Faking system function for $FILE"
             # the below quirk doesn't work anymore... let's append to the .cpp files instead
-	    # CPPOPTS=-D'system(x)=0'" $CPPOPTS"
+	    # CPPOPTS="-D'system(x)=0' $CPPOPTS"
 
             cat >> "$FILE" <<EOF
 int system(const char*) {}
@@ -161,7 +167,7 @@ function quirk_int64()
 {
     if grep __int64 *.cpp >/dev/null 2>/dev/null
     then
-        log "QURIK: Simulating __int64"
+        log_quirk "Simulating __int64"
         CPPOPTS="-include inttypes.h -D'__int64=int64_t'"
     fi
 }
@@ -185,7 +191,7 @@ function quirk_utf()
 	    fi
 	    if [ "$ENCODING" != "" ]
 	    then
-		log "QUIRK: Decoding $FILE using $ENCODING"
+		log_quirk "Decoding $FILE using $ENCODING"
 		iconv -f $ENCODING -t ascii//TRANSLIT <"$FILE" >"$FILE".iconv
 	    fi
 	done
@@ -204,7 +210,7 @@ function quirk_void_main
         if grep "void\s*main" "$FILE" >/dev/null 2>/dev/null
         then
             # substituting void main with int main
-            log "QUIRK: Changing void main() to int main() in $FILE"
+            log_quirk "Changing void main() to int main() in $FILE"
             sed -e 's/void\s*main/int main/' < "$FILE" >"$FILE".new
             mv "$FILE".new "$FILE"
         fi
@@ -216,8 +222,8 @@ function quirk_itoa
     if grep "itoa\|ltoa" *.cpp >/dev/null 2>/dev/null
     then
         # simulation of itoa needed
-        log "QUIRK: simulating non-standard function itoa in $FILE"
-        CPPOPTS="-include itoa.h $CPPOPTS"
+        log_quirk "Simulating non-standard function itoa in $FILE"
+        CPPOPTS="-I\"$TMPDIR\" -include itoa.h $CPPOPTS"
         cat > itoa.h <<EOF
 	/**
 	 * C++ version 0.4 char* style "itoa":
@@ -268,7 +274,7 @@ function quirks_s()
     if grep "strcpy_s\|scanf_s\|strcat_s" *.cpp >/dev/null 2>/dev/null
     then
         # fake _s functions via their insecure counterparts
-        log "QUIRK: Faking strcpy_s, scanf_s, strcat_s"
+        log_quirk "Faking strcpy_s, scanf_s, strcat_s"
         cat > fake_s.h <<EOF
 int strcat_s(char * dest, size_t, const char *src) {
   strcat(dest, src);
@@ -280,7 +286,7 @@ int strcpy_s(char * dest, size_t, const char *src) {
   return 0;
 }
 EOF
-        CPPOPTS="-D'scanf_s=scanf' -include fake_s.h $CPPOPTS"
+        CPPOPTS="-D'scanf_s=scanf' -I\"$TMPDIR\" -include fake_s.h $CPPOPTS"
 
     fi
 }
@@ -356,6 +362,7 @@ function run_tests()
     SOLUTION="$1"
     TMPDIR="$PROGDIR/../tmp"
     CPPOPTS=-std=c++11
+    NOTES=
 
     # prepare files
     extract_archive "$SOLUTION" "$TMPDIR"
@@ -393,7 +400,7 @@ function run_tests()
 	    # be quiet, and if it doesn't work, include standard headers
 	    if ! $GCC -o "$EXE" $CPPOPTS "$SRC" 2>/dev/null
 	    then
-		log "QUIRK: autoincluding standard headers, adding -fpermissive"
+		log_quirk "Autoincluding standard headers, adding -fpermissive"
 		INCLUDES="-include cmath -include cstring -include climits -include cstdio -include cfloat -include iomanip"
                 CPPOPTS="-fpermissive $CPPOPTS"
 		# now yell all the errors and warnings at the world :)
@@ -456,7 +463,7 @@ function run_tests()
 	fi
     done
 
-    echo >> "$TOTALSFILE"
+    echo ",\"$NOTES\"" >> "$TOTALSFILE"
 
 }
 
