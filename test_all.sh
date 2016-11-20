@@ -157,6 +157,15 @@ EOF
     fi
 }
 
+function quirk_int64()
+{
+    if grep __int64 *.cpp >/dev/null 2>/dev/null
+    then
+        log "QURIK: Simulating __int64"
+        CPPOPTS="-include inttypes.h -D'__int64=int64_t'"
+    fi
+}
+
 function quirk_utf()
 {
     if file *.cpp | grep 'UTF-' >/dev/null 2>/dev/null
@@ -188,6 +197,21 @@ function quirk_utf()
     fi
 }
 
+function quirk_void_main
+{
+    for FILE in *.cpp
+    do
+        if grep "void\s*main" "$FILE" >/dev/null 2>/dev/null
+        then
+            # substituting void main with int main
+            log "QUIRK: Changing void main() to int main()"
+            sed -e 's/void\s*main/int main/' < "$FILE" >"$FILE".new
+            mv "$FILE".new "$FILE"
+        fi
+    done
+}
+
+
 function quirks()
 {
     # some archives have nested zips/rars in them :(
@@ -211,6 +235,12 @@ function quirks()
 
     # some programs are UTF-encoded :(
     quirk_utf
+
+    # some programs use VC-specific __int64
+    quirk_int64
+
+    # some programs use void main, which is non-standard
+    quirk_void_main
 }
 
 function extract_archive()
@@ -269,8 +299,9 @@ function run_tests()
 	    # be quiet, and if it doesn't work, include standard headers
 	    if ! $GCC -o "$EXE" $CPPOPTS "$SRC" 2>/dev/null
 	    then
-		log "QUIRK: autoincluding standard headers"
+		log "QUIRK: autoincluding standard headers, adding -fpermissive"
 		INCLUDES="-include cmath -include cstring -include climits -include cstdio -include cfloat -include iomanip"
+                CPPOPTS="-fpermissive $CPPOPTS"
 		# now yell all the errors and warnings at the world :)
 		$GCC -o "$EXE" $INCLUDES $CPPOPTS "$SRC"
 	    fi
