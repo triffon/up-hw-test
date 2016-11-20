@@ -80,20 +80,38 @@ function quirk_nested_dirs
 
 function quirk_wrong_names
 {
-    if ls *.cpp 2> /dev/null | grep -v '^prog[0-9]*.cpp$' >/dev/null 2>/dev/null
+    if ls *' '*.cpp >/dev/null 2>/dev/null
     then
-	for SUBFILE in *.cpp
-	do
-	    if echo $SUBFILE | grep -v '^prog[0-9]*.cpp$' > /dev/null 2> /dev/null
-	    then
-	        # wrong name, try to recover...
-		NEWNAME=`echo "$SUBFILE" | sed -e 's/^\(\|.*[^0-9]\)\([0-9]\+\)\(\.\(cpp\|c\|cc\)\)\+/prog\2.cpp/'`
-		log "QUIRK: Autorenaming $SUBFILE to $NEWNAME"
-		mv "$SUBFILE" "$NEWNAME"
-	    fi
-	done
+        for SUBFILE in *' '*.cpp
+        do
+            # spaces in filenames, remove them :(
+	    NEWNAME=`echo "$SUBFILE" | sed -e 's/ //g'`
+	    log "QUIRK: Autorenaming $SUBFILE to $NEWNAME"
+	    mv "$SUBFILE" "$NEWNAME"
+        done
     fi
 
+    if ls *'-'*.cpp >/dev/null 2>/dev/null
+    then
+        for SUBFILE in *'-'*.cpp
+        do
+            # dashes in filenames, replace them with underscores :(
+	    NEWNAME=`echo "$SUBFILE" | sed -e 's/-/_/g'`
+	    log "QUIRK: Autorenaming $SUBFILE to $NEWNAME"
+	    mv "$SUBFILE" "$NEWNAME"
+        done
+    fi
+
+    if ls fn_*.cpp >/dev/null 2>/dev/null
+    then
+        for SUBFILE in fn_*.cpp
+        do
+            # fn_XXXXX instead of fnXXXXX, remove first underscore
+	    NEWNAME=`echo "$SUBFILE" | sed -e 's/fn_/fn/'`
+	    log "QUIRK: Autorenaming $SUBFILE to $NEWNAME"
+	    mv "$SUBFILE" "$NEWNAME"
+        done
+    fi
 }
 
 function quirk_stdafx
@@ -231,13 +249,13 @@ function run_tests()
     fi
 
     TMPDIR="$PROGDIR/../tmp"
- 
+
     CPPOPTS=-std=c++11
 
     echo -n "$SOLUTION_ID" >> "$TOTALSFILE"
 
     log "Testing $SOLUTION_ID"
-    
+
     extract_archive "$SOLUTION" "$TMPDIR"
 
     for ID in `seq 1 $MAX`
@@ -312,7 +330,7 @@ function run_tests()
 	    done
 	fi
     done
-    
+
     echo >> "$TOTALSFILE"
 
 }
