@@ -377,7 +377,7 @@ function run_tests()
     REGEXP_NUMBER='^[0-9]+$'
     if ! [[ $SOLUTION_ID =~ $REGEXP_NUMBER ]]
     then
-        log "Could not parse ID from file name $FIRST_PROGRAM_BASENAME in solution $SOLUTION"
+        log "Could not parse ID from file name $FIRST_PROGRAM_BASENAME in solution $SOLUTION containing files "`ls "$TMPDIR"`
         return
     fi
 
