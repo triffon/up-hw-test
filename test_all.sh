@@ -204,7 +204,7 @@ function quirk_void_main
         if grep "void\s*main" "$FILE" >/dev/null 2>/dev/null
         then
             # substituting void main with int main
-            log "QUIRK: Changing void main() to int main()"
+            log "QUIRK: Changing void main() to int main() in $FILE"
             sed -e 's/void\s*main/int main/' < "$FILE" >"$FILE".new
             mv "$FILE".new "$FILE"
         fi
@@ -222,7 +222,7 @@ function quirks()
 
     # some cpp files are named wrongly :(
     # disable quirks because of new file naming
-    # quirk_wrong_names
+    quirk_wrong_names
 
     # some programs expect stdafx.h, conio.h, windows.h, tchar.h :(
     quirk_stdafx
