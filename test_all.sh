@@ -361,7 +361,7 @@ function extract_archive()
 function run_tests()
 {
     SOLUTION="$1"
-    TMPDIR="$PROGDIR/../tmp"
+    TMPDIR=`readlink -f "$PROGDIR/../tmp"`
     CPPOPTS=-std=c++11
     NOTES=
 
