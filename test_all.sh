@@ -263,6 +263,28 @@ EOF
     fi
 }
 
+function quirks_s()
+{
+    if grep "strcpy_s\|scanf_s\|strcat_s" *.cpp >/dev/null 2>/dev/null
+    then
+        # fake _s functions via their insecure counterparts
+        log "QUIRK: Faking strcpy_s, scanf_s, strcat_s"
+        cat > fake_s.h <<EOF
+int strcat_s(char * dest, size_t, const char *src) {
+  strcat(dest, src);
+  return 0;
+}
+
+int strcpy_s(char * dest, size_t, const char *src) {
+  strcpy(dest, src);
+  return 0;
+}
+EOF
+        CPPOPTS="-D'scanf_s=scanf' -include fake_s.h $CPPOPTS"
+
+    fi
+}
+
 # these quirks need to be run in advance to prepare for the parsing of the solution ID
 function quirks_naming()
 {
@@ -289,8 +311,11 @@ function quirks()
     quirk_header "windows.h"
     quirk_header "tchar.h"
 
-    # some programs use the C11 funcitons itoa, _itoa, ltoa, _ltoa
+    # some programs use the non-standard funcitons itoa, _itoa, ltoa, _ltoa
     quirk_itoa
+
+    # some programs use the Annex K C11 _s funcitons (strcat_s, strcpy_s, scanf_s)
+    quirk_s
 
     # some programs use system("pause")
     quirk_system_pause
