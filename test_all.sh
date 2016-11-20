@@ -125,7 +125,7 @@ function quirk_stdafx
 #include <cmath>
 #include <cstring>
 EOF
-	CPPOPTS="-I$TMPDIR $CPPOPTS"
+	CPPOPTS="-I\"$TMPDIR\" $CPPOPTS"
     fi
 }
 
@@ -136,25 +136,25 @@ function quirk_header
     then
 	log "QUIRK: Creating dummy $HEADER"
 	touch "$HEADER"
-	CPPOPTS="-I$TMPDIR $CPPOPTS"
+	CPPOPTS="-I\"$TMPDIR\" $CPPOPTS"
     fi
 }
 
 function quirk_system_pause
 {
-    if grep 'system' *.cpp >/dev/null 2>/dev/null
-    then
-	log "QUIRK: Faking system function"
-        # the below quirk doesn't work anymore... let's append to the .cpp files instead
-	# CPPOPTS=-D'system(x)=0'" $CPPOPTS"
+    for FILE in *.cpp
+    do
+        if grep system "$FILE" >/dev/null 2>/dev/null
+        then
+	    log "QUIRK: Faking system function for $FILE"
+            # the below quirk doesn't work anymore... let's append to the .cpp files instead
+	    # CPPOPTS=-D'system(x)=0'" $CPPOPTS"
 
-        for FILE in *.cpp
-        do
             cat >> "$FILE" <<EOF
 int system(const char*) {}
 EOF
-        done
-    fi
+        fi
+    done
 }
 
 function quirk_int64()
@@ -217,7 +217,7 @@ function quirk_itoa
     then
         # simulation of itoa needed
         log "QUIRK: simulating non-standard function itoa in $FILE"
-        CPPOPTS="-I$TMPDIR -include itoa.h $CPPOPTS"
+        CPPOPTS="-include itoa.h $CPPOPTS"
         cat > itoa.h <<EOF
 	/**
 	 * C++ version 0.4 char* style "itoa":
@@ -263,7 +263,8 @@ EOF
     fi
 }
 
-function quirks()
+# these quirks need to be run in advance to prepare for the parsing of the solution ID
+function quirks_naming()
 {
     # some archives have nested zips/rars in them :(
     quirk_nested
@@ -274,6 +275,13 @@ function quirks()
     # some cpp files are named wrongly :(
     # disable quirks because of new file naming
     quirk_wrong_names
+}
+
+# these quirks are run after the solution ID is detected
+function quirks()
+{
+    DIR="$1"
+    pushd "$DIR" >/dev/null
 
     # some programs expect stdafx.h, conio.h, windows.h, tchar.h :(
     quirk_stdafx
@@ -295,6 +303,8 @@ function quirks()
 
     # some programs use void main, which is non-standard
     quirk_void_main
+
+    popd "$DIR" >/dev/null
 }
 
 function extract_archive()
@@ -310,8 +320,8 @@ function extract_archive()
     # copy files to target dir instead
     do_copy "$1"
 
-    # attempt to recover broken solutions
-    quirks
+    # attempt to recover solutions with wrong naming and structure
+    quirks_naming
 
     popd > /dev/null
 }
@@ -319,7 +329,14 @@ function extract_archive()
 function run_tests()
 {
     SOLUTION="$1"
-    FIRST_PROGRAM_PATH=("$SOLUTION"/fn*)
+    TMPDIR="$PROGDIR/../tmp"
+    CPPOPTS=-std=c++11
+
+    # prepare files
+    extract_archive "$SOLUTION" "$TMPDIR"
+
+    # try to detect solution ID
+    FIRST_PROGRAM_PATH=("$TMPDIR"/fn*)
     FIRST_PROGRAM_BASENAME=`basename "$FIRST_PROGRAM_PATH"`
 
     # extract FN
@@ -332,15 +349,13 @@ function run_tests()
         return
     fi
 
-    TMPDIR="$PROGDIR/../tmp"
-
-    CPPOPTS=-std=c++11
-
+    # prepare for testing
     echo -n "$SOLUTION_ID" >> "$TOTALSFILE"
 
     log "Testing $SOLUTION_ID"
 
-    extract_archive "$SOLUTION" "$TMPDIR"
+    # attempt to recover broken solutions
+    quirks "$TMPDIR"
 
     for ID in `seq 1 $MAX`
     do
