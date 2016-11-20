@@ -45,7 +45,8 @@ function write_status()
 function do_copy()
 {
     FILE="$1"
-    cp "$FILE"/* .
+    # copy recursively in case there are nested directories
+    cp -r "$FILE"/* .
 }
 
 function do_extract()
@@ -118,6 +119,17 @@ function quirk_wrong_names
 	    mv "$SUBFILE" "$NEWNAME"
         done
     fi
+
+    for SUBFILE in *.cpp
+    do
+        if [[ "$SUBFILE" =~ [A-Z] ]]
+        then
+            # file name has capital letters, convert to lowercase
+	    NEWNAME=`echo "$SUBFILE" | tr '[:upper:]' '[:lower:]'`
+	    log_quirk "Autorenaming $SUBFILE to $NEWNAME"
+	    mv "$SUBFILE" "$NEWNAME"
+        fi
+    done
 }
 
 function quirk_stdafx
