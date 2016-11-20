@@ -7,6 +7,7 @@ function run_docker()
            -v `pwd`/$RESULTS_DIR:$BASE/results \
            -v `pwd`/progs:$BASE/progs:ro \
            $OPTS \
+           -it \
            $IMAGE
 }
 
