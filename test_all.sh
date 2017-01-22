@@ -10,6 +10,7 @@ LIMIT=2M
 MAX=10
 GCC=g++
 SHELL="/bin/sh -c"
+SANDBOX="su test -c"
 
 function create_totals()
 {
@@ -451,7 +452,7 @@ function run_tests()
 		    rm -f "$PROGOUT" "$PROGERR"
 
 		    # run in a subshell, timeboxed and with limited output
-		    STATUS=`timeout $TIMEOUT "$EXE" < "$TESTIN" 2> "$PROGERR" | head -c $LIMIT > "$PROGOUT"; echo ${PIPESTATUS[0]}`
+		    STATUS=`timeout $TIMEOUT $SANDBOX "$EXE" < "$TESTIN" 2> "$PROGERR" | head -c $LIMIT > "$PROGOUT"; echo ${PIPESTATUS[0]}`
 
 		    # check for timeout
 		    if [ $STATUS = 124 ]

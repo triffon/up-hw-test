@@ -4,3 +4,6 @@ FROM trifon/up-hw-test:latest
 MAINTAINER Trifon Trifonov <triffon@fmi.uni-sofia.bg>
 
 COPY tests /usr/src/up-hw-test/tests
+
+# Prevent the test user from seeing the tests and their answers
+RUN chmod -R go-rwx /usr/src/up-hw-test/tests
