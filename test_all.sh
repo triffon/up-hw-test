@@ -284,10 +284,10 @@ EOF
 
 function quirk_s()
 {
-    if grep "strcpy_s\|scanf_s\|strcat_s" *.cpp >/dev/null 2>/dev/null
+    if grep "strcpy_s\|scanf_s\|strcat_s\|strtok_s" *.cpp >/dev/null 2>/dev/null
     then
         # fake _s functions via their insecure counterparts
-        log_quirk "Faking strcpy_s, scanf_s, strcat_s"
+        log_quirk "Faking strcpy_s, scanf_s, strcat_s, strtok_s"
         cat > fake_s.h <<EOF
 #include <cstring>
 int strcat_s(char * dest, size_t, const char *src) {
@@ -314,6 +314,13 @@ int strcpy_s(
 ) {
   strcpy(strDestination, strSource);
   return 0;
+}
+char *strtok_s(
+  char *strToken,
+  const char *strDelimit,
+  char **context
+) {
+  return strtok(strToken, strDelimit);
 }
 EOF
         CPPOPTS="$CPPOPTS -D'scanf_s=scanf' -I\"$TMPDIR\" -include fake_s.h"
@@ -391,7 +398,7 @@ function run_tests()
 {
     SOLUTION="$1"
     TMPDIR=`readlink -f "$PROGDIR/../tmp"`
-    CPPOPTS=-std=c++11
+    CPPOPTS=
     NOTES=
 
     # prepare files
@@ -431,7 +438,7 @@ function run_tests()
 	    if ! eval $GCC -o "$EXE" $CPPOPTS "$SRC" 2>/dev/null
 	    then
 		log_quirk "Autoincluding standard headers, adding -fpermissive for $SRC"
-		MORECPPOPTS="-include cmath -include cstring -include climits -include cstdio -include cfloat -include iomanip -fpermissive"
+		MORECPPOPTS="-std=c++11 -include cmath -include cstring -include climits -include cstdio -include cfloat -include iomanip -include algorithm -fpermissive"
 		# now yell all the errors and warnings at the world :)
 		eval $GCC -o "$EXE" $CPPOPTS $MORECPPOPTS "$SRC"
 	    fi
