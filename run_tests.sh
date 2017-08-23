@@ -4,7 +4,7 @@ function run_docker()
 {
     echo "Running image $IMAGE..."
     docker run --rm \
-           --network=none \
+           --net=none \
            -v `pwd`/$RESULTS_DIR:$BASE/results \
            -v `pwd`/progs:$BASE/progs:ro \
            $OPTS \
