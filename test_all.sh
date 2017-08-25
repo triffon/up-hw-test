@@ -398,7 +398,7 @@ function run_tests()
 {
     SOLUTION="$1"
     TMPDIR=`readlink -f "$PROGDIR/../tmp"`
-    CPPOPTS=
+    CPPOPTS="-I $TESTDIR -DREAD_TEST_CASE_NAME_FROM_STDIN"
     NOTES=
 
     # prepare files
